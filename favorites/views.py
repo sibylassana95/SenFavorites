@@ -7,12 +7,12 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 
 
-@login_required
+@login_required(login_url='login')
 def favorite_list(request):
     favorites = Favorite.objects.filter(user=request.user)
     return render(request, 'favorites/favorite_list.html', {'favorites': favorites})
 
-@login_required
+@login_required(login_url='login')
 def add_favorite(request):
     if request.method == 'POST':
         form = FavoriteForm(request.POST)
@@ -25,7 +25,7 @@ def add_favorite(request):
         form = FavoriteForm()
     return render(request, 'favorites/add_favorite.html', {'form': form})
 
-@login_required
+@login_required(login_url='login')
 def delete_favorite(request, pk):
     favorite = Favorite.objects.get(pk=pk, user=request.user)
     if request.method == 'POST':
