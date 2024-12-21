@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="container mx-auto mt-8 px-4">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Ajouter un Nouveau Favori</h1>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <div>
+          <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Titre
+          </label>
+          <div class="mt-1">
+            <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" required
+                   class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                   placeholder="Entrez le titre du site">
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.url.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            URL
+          </label>
+          <div class="mt-1">
+            <input type="url" name="{{ form.url.name }}" id="{{ form.url.id_for_label }}" required
+                   class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                   placeholder="https://example.com">
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Description
+          </label>
+          <div class="mt-1">
+            <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="4"
+                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      placeholder="Ajoutez une description (optionnel)"></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4">
+          <a href="{% url 'favorite_list' %}" 
+             class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Retour
+          </a>
+          <button type="submit"
+                  class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600">
+            <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}
