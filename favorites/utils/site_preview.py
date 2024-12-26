@@ -2,88 +2,96 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from requests.exceptions import RequestException, Timeout, SSLError
+from requests.exceptions import RequestException, ProxyError, SSLError
 
 logger = logging.getLogger(__name__)
 
+class FaviconHandler:
+    """Classe pour gérer la récupération des favicons de manière orientée objet"""
+    
+    GOOGLE_FAVICON_URL = "https://www.google.com/s2/favicons?domain={}"
+    
+    def __init__(self, url):
+        self.url = url
+        self.domain = self._get_domain()
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; FavoritesBot/1.0)',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        }
+        self.timeout = 3
+        
+    def _get_domain(self):
+        """Extrait le domaine de base de l'URL."""
+        parsed = urlparse(self.url)
+        return f"{parsed.scheme}://{parsed.netloc}"
+    
+    def _make_request(self, url, method='get', **kwargs):
+        """Effectue une requête HTTP sécurisée."""
+        try:
+            request_method = getattr(requests, method.lower())
+            kwargs.setdefault('headers', self.headers)
+            kwargs.setdefault('timeout', self.timeout)
+            kwargs.setdefault('verify', False)
+            kwargs.setdefault('allow_redirects', True)
+            
+            return request_method(url, **kwargs)
+        except (ProxyError, SSLError) as e:
+            logger.warning(f"Erreur de proxy/SSL pour {url}: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Erreur lors de la requête vers {url}: {str(e)}")
+            return None
+
+    def _check_favicon_exists(self, favicon_url):
+        """Vérifie si le favicon existe à l'URL donnée."""
+        response = self._make_request(favicon_url, method='head')
+        return response and response.status_code == 200
+
+    def _get_google_favicon(self):
+        """Récupère le favicon via le service Google Favicon."""
+        domain = urlparse(self.url).netloc
+        return self.GOOGLE_FAVICON_URL.format(domain)
+
+    def get_favicon(self):
+        """Récupère l'URL du favicon en utilisant plusieurs méthodes."""
+        try:
+            # 1. Essayer d'obtenir la page
+            response = self._make_request(self.url)
+            if not response or response.status_code != 200:
+                logger.warning(f"Impossible d'accéder à {self.url}")
+                return {'success': True, 'favicon_url': self._get_google_favicon()}
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # 2. Chercher dans les balises link
+            icon_rels = ['icon', 'shortcut icon', 'apple-touch-icon']
+            for rel in icon_rels:
+                for link in soup.find_all('link', rel=lambda r: r and rel in r.lower()):
+                    href = link.get('href')
+                    if href:
+                        favicon_url = urljoin(self.domain, href)
+                        if self._check_favicon_exists(favicon_url):
+                            logger.info(f"Favicon trouvé: {favicon_url}")
+                            return {'success': True, 'favicon_url': favicon_url}
+
+            # 3. Essayer favicon.ico par défaut
+            default_favicon = urljoin(self.domain, '/favicon.ico')
+            if self._check_favicon_exists(default_favicon):
+                logger.info(f"Favicon par défaut trouvé: {default_favicon}")
+                return {'success': True, 'favicon_url': default_favicon}
+
+            # 4. Utiliser Google comme fallback
+            logger.info(f"Utilisation du service Google Favicon pour {self.domain}")
+            return {'success': True, 'favicon_url': self._get_google_favicon()}
+
+        except Exception as e:
+            logger.error(f"Erreur lors de la récupération du favicon: {str(e)}")
+            return {'success': True, 'favicon_url': self._get_google_favicon()}
+
 def get_site_preview(url):
     """
-    Récupère le favicon d'un site avec une meilleure gestion des erreurs.
+    Fonction wrapper qui utilise FaviconHandler pour récupérer le favicon.
+    Maintenue pour la compatibilité avec le code existant.
     """
-    try:
-        # Configuration de base
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        timeout = 3  # Timeout réduit pour PythonAnywhere
-        
-        # Extraction du domaine
-        parsed_url = urlparse(url)
-        domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
-
-        try:
-            # Première tentative avec vérification SSL
-            response = requests.get(url, headers=headers, timeout=timeout, verify=True)
-        except (SSLError, Timeout):
-            logger.warning(f"Première tentative échouée pour {url}, réessai sans vérification SSL")
-            # Deuxième tentative sans vérification SSL
-            response = requests.get(url, headers=headers, timeout=timeout, verify=False)
-
-        if response.status_code != 200:
-            logger.warning(f"Statut HTTP non-200 pour {url}: {response.status_code}")
-            return {'success': False, 'favicon_url': None}
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        favicon_url = None
-
-        # Recherche prioritaire des favicons
-        icon_rels = ['icon', 'shortcut icon', 'apple-touch-icon']
-        for rel in icon_rels:
-            icons = soup.find_all('link', rel=lambda r: r and rel in r.lower())
-            for icon in icons:
-                href = icon.get('href')
-                if href:
-                    potential_favicon = urljoin(domain, href)
-                    try:
-                        # Vérification que le favicon est accessible
-                        favicon_response = requests.head(
-                            potential_favicon, 
-                            headers=headers, 
-                            timeout=2,
-                            allow_redirects=True
-                        )
-                        if favicon_response.status_code == 200:
-                            favicon_url = potential_favicon
-                            break
-                    except RequestException:
-                        continue
-
-            if favicon_url:
-                break
-
-        # Fallback sur favicon.ico si rien n'a été trouvé
-        if not favicon_url:
-            default_favicon = f"{domain}/favicon.ico"
-            try:
-                favicon_response = requests.head(
-                    default_favicon, 
-                    headers=headers, 
-                    timeout=2,
-                    allow_redirects=True
-                )
-                if favicon_response.status_code == 200:
-                    favicon_url = default_favicon
-            except RequestException:
-                pass
-
-        return {
-            'success': favicon_url is not None,
-            'favicon_url': favicon_url
-        }
-
-    except Exception as e:
-        logger.error(f"Erreur lors de la récupération du favicon pour {url}: {str(e)}")
-        return {
-            'success': False,
-            'favicon_url': None
-        }
+    handler = FaviconHandler(url)
+    return handler.get_favicon()
