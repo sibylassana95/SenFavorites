@@ -14,7 +14,26 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from .utils.site_preview import get_site_preview
 
+@login_required(login_url='login')
+def add_favorite(request):
+    if request.method == 'POST':
+        form = FavoriteForm(request.POST)
+        if form.is_valid():
+            favorite = form.save(commit=False)
+            favorite.user = request.user
+            
+            # Récupérer le favicon avant la sauvegarde
+            preview = get_site_preview(favorite.url)
+            if preview['success']:
+                favorite.favicon_url = preview['favicon_url']
+            
+            favorite.save()
+            return redirect('favorite_list')
+    else:
+        form = FavoriteForm()
+    return render(request, 'favorites/add_favorite.html', {'form': form})
 
 @login_required(login_url='login')
 def favorite_list(request):
@@ -28,7 +47,6 @@ def favorite_list(request):
             Q(url__icontains=search_query)
         )
     
-    # Pagination - 9 favoris par page
     paginator = Paginator(favorites, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -37,8 +55,6 @@ def favorite_list(request):
         'page_obj': page_obj,
         'search_query': search_query
     })
-
-
 
 def search_favorites(request):
     search_query = request.GET.get('search', '')
@@ -68,18 +84,6 @@ def search_favorites(request):
         'current_page': page_obj.number,
         'total_pages': paginator.num_pages,
     })
-@login_required(login_url='login')
-def add_favorite(request):
-    if request.method == 'POST':
-        form = FavoriteForm(request.POST)
-        if form.is_valid():
-            favorite = form.save(commit=False)
-            favorite.user = request.user
-            favorite.save()
-            return redirect('favorite_list')
-    else:
-        form = FavoriteForm()
-    return render(request, 'favorites/add_favorite.html', {'form': form})
 
 @login_required(login_url='login')
 def delete_favorite(request, pk):
@@ -88,8 +92,6 @@ def delete_favorite(request, pk):
         favorite.delete()
         return redirect('favorite_list')
     return render(request, 'favorites/delete_favorite.html', {'favorite': favorite})
-
-
 
 def register_view(request):
     if request.method == 'POST':
@@ -106,9 +108,6 @@ def register_view(request):
 def deconnection(request):
     logout(request)
     return redirect('login')
-
-
-
 
 class AddFavoriteView(APIView):
     permission_classes = [IsAuthenticated]
