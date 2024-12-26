@@ -2,22 +2,73 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Favorite
 from .forms import FavoriteForm
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Favorite
 from .serializers import FavoriteSerializer
 from rest_framework.views import APIView
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
 
 @login_required(login_url='login')
 def favorite_list(request):
+    search_query = request.GET.get('search', '')
     favorites = Favorite.objects.filter(user=request.user)
-    return render(request, 'favorites/favorite_list.html', {'favorites': favorites})
+    
+    if search_query:
+        favorites = favorites.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(url__icontains=search_query)
+        )
+    
+    # Pagination - 9 favoris par page
+    paginator = Paginator(favorites, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'favorites/favorite_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query
+    })
 
+
+
+def search_favorites(request):
+    search_query = request.GET.get('search', '')
+    favorites = Favorite.objects.filter(user=request.user)
+    
+    if search_query:
+        favorites = favorites.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(url__icontains=search_query)
+        )
+    
+    paginator = Paginator(favorites, 9)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    html = render_to_string(
+        'favorites/favorite_cards.html',
+        {'page_obj': page_obj, 'search_query': search_query},
+        request=request
+    )
+    
+    return JsonResponse({
+        'html': html,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'current_page': page_obj.number,
+        'total_pages': paginator.num_pages,
+    })
 @login_required(login_url='login')
 def add_favorite(request):
     if request.method == 'POST':

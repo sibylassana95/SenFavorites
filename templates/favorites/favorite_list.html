@@ -1,84 +1,85 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
 <main class="container mx-auto mt-8 px-4">
   <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Mes Sites Favoris</h1>
-      <a href="{% url 'add_favorite' %}" 
-         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-150">
-        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Ajouter un Favori
-      </a>
+      
+      <!-- Barre de recherche -->
+      <div class="flex items-center w-full sm:w-auto">
+        <div class="relative flex-1 sm:flex-initial">
+          <input type="text" 
+                 id="search-input"
+                 placeholder="Rechercher un favori..." 
+                 class="w-full px-4 py-2 pr-10 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+          <div class="absolute right-2 top-1/2 -translate-y-1/2">
+            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+        
+        <a href="{% url 'add_favorite' %}" 
+           class="ml-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-150">
+          <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Ajouter
+        </a>
+      </div>
     </div>
 
-    {% if favorites %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for favorite in favorites %}
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <!-- Card Header -->
-            <div class="h-32 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 p-4 flex items-center justify-center">
-              <div class="w-16 h-16 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow-lg">
-                <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-              </div>
-            </div>
+    <!-- Conteneur des résultats -->
+    <div id="results-container">
+      {% include "favorites/favorite_cards.html" with page_obj=page_obj %}
+    </div>
 
-            <!-- Card Content -->
-            <div class="p-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 line-clamp-1">
-                {{ favorite.title }}
-              </h2>
-              
-              {% if favorite.description %}
-                <p class="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-4">
-                  {{ favorite.description }}
-                </p>
-              {% endif %}
+     <!-- Pagination -->
+     {% if page_obj.paginator.num_pages > 1 %}
+     <div class="flex justify-center mt-8">
+       <nav class="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+         {% if page_obj.has_previous %}
+           <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700">
+             <span class="sr-only">Précédent</span>
+             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+             </svg>
+           </a>
+         {% endif %}
 
-              <!-- Card Actions -->
-              <div class="flex justify-between items-center mt-4">
-                <a href="{{ favorite.url }}" target="_blank" rel="noopener noreferrer"
-                   class="inline-flex items-center px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors duration-150">
-                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  Visiter
-                </a>
-                
-                <a href="{% url 'delete_favorite' favorite.pk %}" 
-                   class="inline-flex items-center px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-md transition-colors duration-150">
-                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Supprimer
-                </a>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-        </div>
-        <p class="text-gray-600 dark:text-gray-300 text-lg">
-          Aucun favori enregistré pour le moment.
-        </p>
-        <p class="text-gray-500 dark:text-gray-400 mt-2">
-          Commencez par ajouter vos sites préférés !
-        </p>
-      </div>
-    {% endif %}
+         {% for num in page_obj.paginator.page_range %}
+           {% if page_obj.number == num %}
+             <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600 dark:bg-blue-900 dark:text-blue-200 dark:border-gray-600">
+               {{ num }}
+             </span>
+           {% else %}
+             <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700">
+               {{ num }}
+             </a>
+           {% endif %}
+         {% endfor %}
+
+         {% if page_obj.has_next %}
+           <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700">
+             <span class="sr-only">Suivant</span>
+             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+             </svg>
+           </a>
+         {% endif %}
+       </nav>
+     </div>
+     {% endif %}
+    </div>
   </div>
 </main>
+
+{% block extra_js %}
+<script src="{% static 'js/search.js' %}"></script>
+{% endblock %}
 {% endblock %}
