@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 urlpatterns = [
     path('', views.favorite_list, name='favorite_list'),
     path('api/search/', views.search_favorites, name='search_favorites'),
