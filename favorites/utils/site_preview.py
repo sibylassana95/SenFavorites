@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-import re
 
 def get_site_preview(url):
     try:
@@ -16,8 +15,11 @@ def get_site_preview(url):
         favicon_links = soup.find_all('link', rel=lambda r: r and ('icon' in r or 'shortcut icon' in r))
         
         if favicon_links:
-            favicon_href = favicon_links[0].get('href', '')
-            favicon_url = urljoin(url, favicon_href)
+            for link in favicon_links:
+                if 'icon' in link.get('rel', []):
+                    favicon_href = link.get('href', '')
+                    favicon_url = urljoin(url, favicon_href)
+                    break
         else:
             # Essayer le favicon par défaut
             parsed_url = urlparse(url)
