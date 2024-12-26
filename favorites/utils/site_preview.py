@@ -16,7 +16,7 @@ def get_site_preview(url):
         
         if favicon_links:
             for link in favicon_links:
-                if 'icon' in link.get('rel', []):
+                if 'icon' in link.get('rel', []) and link.get('type') == 'image/x-icon':
                     favicon_href = link.get('href', '')
                     favicon_url = urljoin(url, favicon_href)
                     break
