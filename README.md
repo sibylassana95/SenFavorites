@@ -74,7 +74,7 @@ L'application utilise Tailwind CSS pour le style, ce qui permet une personnalisa
 
 ## Scrrenshots 📸   
 
-![Screenshot 1](sreen/screenshot1.png)
+![Liste des favoris](https://github.com/sibylassana95/SenFavorites/blob/main/screen/list.png?raw=true)
 
 
 ## 👥 Contribution
