@@ -30,7 +30,7 @@ def favorite_list(request):
         )
     
     # Pagination - 9 favoris par page
-    paginator = Paginator(favorites, 3)
+    paginator = Paginator(favorites, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
