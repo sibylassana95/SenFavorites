@@ -87,6 +87,10 @@ Les contributions sont les bienvenues ! Pour contribuer :
 4. Poussez vers la branche
 5. Ouvrez une Pull Request
 
+## Extension disponible pour chrome 🔗
+
+Lien  : [Extension](https://github.com/sibylassana95/senfavorites_extension)
+
 ## 📝 License
 
 Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
@@ -97,3 +101,7 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 - Twitter : [@sibyog13](https://twitter.com/sibyog13)
 - LinkedIn : [Siby Lassana](https://www.linkedin.com/in/sibylassana/)
 
+## 👤 Auteur 
+
+[![LASSANA SIBY](https://avatars.githubusercontent.com/u/103085452?u=13ace4d88a52056741734e0f802ca7c0053e1e80&v=4&s=40)](https://github.com/sibylassana95)  
+Created by **[Lassana SIBY](https://github.com/sibylassana95)**
